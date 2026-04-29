@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptFlow — AI Prompt Optimizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #07080f;
+  --surface:      #0e0f1a;
+  --card:         #12131f;
+  --card-raised:  #181928;
+  --border:       #1e2035;
+  --border-mid:   #2a2c4a;
+  --border-bright:#3d3f6e;
+  --blue:         #4f8cff;
+  --purple:       #9b6dff;
+  --grad:         linear-gradient(135deg, #4f8cff 0%, #9b6dff 100%);
+  --grad-soft:    linear-gradient(135deg, rgba(79,140,255,0.18) 0%, rgba(155,109,255,0.18) 100%);
+  --grad-glow:    linear-gradient(135deg, rgba(79,140,255,0.45) 0%, rgba(155,109,255,0.45) 100%);
+  --green:        #2eeba8;
+  --green-dim:    rgba(46,235,168,0.1);
+  --green-border: rgba(46,235,168,0.28);
+  --red-dim:      rgba(255,90,90,0.18);
+  --red-border:   rgba(255,90,90,0.4);
+  --text:         #dde1f5;
+  --text-muted:   #6b6f94;
+  --text-dim:     #3a3d5c;
+  --radius-sm:    10px;
+  --radius-md:    14px;
+  --radius-lg:    20px;
+  --shadow-card:  0 2px 24px rgba(0,0,0,0.5);
+  --shadow-glow:  0 0 40px rgba(79,140,255,0.18), 0 0 80px rgba(155,109,255,0.1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+}
+.bg-orb-1 {
+  width: 560px; height: 560px;
+  top: -180px; left: -120px;
+  background: radial-gradient(circle, rgba(79,140,255,0.12) 0%, transparent 70%);
+}
+.bg-orb-2 {
+  width: 480px; height: 480px;
+  top: 20%; right: -160px;
+  background: radial-gradient(circle, rgba(155,109,255,0.1) 0%, transparent 70%);
+}
+.bg-orb-3 {
+  width: 360px; height: 360px;
+  bottom: 10%; left: 10%;
+  background: radial-gradient(circle, rgba(46,235,168,0.06) 0%, transparent 70%);
+}
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(79,140,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,140,255,0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 24px 100px;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 0 0;
+  margin-bottom: 64px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--grad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px rgba(79,140,255,0.2), 0 4px 16px rgba(79,140,255,0.25);
+  font-size: 18px;
+}
+
+.logo-wordmark {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #dde1f5;
+}
+
+.logo-flow {
+  background: linear-gradient(135deg, #4f8cff 0%, #9b6dff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-mid);
+  border-radius: 100px;
+  padding: 5px 12px;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 56px;
+  animation: heroIn 0.7s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+@keyframes heroIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--grad-soft);
+  border: 1px solid var(--border-bright);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 24px;
+}
+
+.eyebrow-dot {
+  width: 6px; height: 6px;
+  background: var(--blue);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 6px var(--blue);
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.4; transform:scale(0.75); }
+}
+
+.hero h1 {
+  font-size: clamp(40px, 8vw, 68px);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #c8d4ff 50%, var(--purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 17px;
+  color: var(--text-muted);
+  font-weight: 400;
+  max-width: 480px;
+  margin: 0 auto 28px;
+  line-height: 1.65;
+}
+
+.hero-sub strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.hero-platforms {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+}
+
+.hero-platforms span {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 9px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+
+.section-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::before {
+  content: '';
+  display: block;
+  width: 16px; height: 1px;
+  background: linear-gradient(90deg, var(--blue), var(--purple));
+  opacity: 0.5;
+}
+
+.templates-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tpl-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-mid);
+  border-radius: 100px;
+  padding: 7px 15px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.tpl-btn:hover {
+  border-color: var(--blue);
+  color: var(--text);
+  background: rgba(79,140,255,0.1);
+  box-shadow: 0 0 12px rgba(79,140,255,0.15);
+}
+
+.tpl-btn.active {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: rgba(79,140,255,0.12);
+  box-shadow: 0 0 12px rgba(79,140,255,0.15);
+}
+
+.tpl-icon { font-size: 12px; opacity: 0.85; }
+
+.input-card {
+  background: var(--card);
+  border: 1.5px solid var(--border-bright);
+  border-radius: var(--radius-lg);
+  padding: 22px 22px 16px;
+  margin-bottom: 6px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(79,140,255,0.05), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.input-card:hover {
+  border-color: rgba(79,140,255,0.35);
+  box-shadow: var(--shadow-card), 0 0 20px rgba(79,140,255,0.08);
+}
+
+.input-card:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(79,140,255,0.14), 0 0 28px rgba(79,140,255,0.12), var(--shadow-card);
+}
+
+textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15.5px;
+  font-weight: 400;
+  line-height: 1.7;
+  resize: none;
+  min-height: 150px;
+}
+
+textarea::placeholder { color: #4a4d6e; }
+
+.input-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.char-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.input-tip {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.input-tip::before {
+  content: '💡';
+  font-size: 11px;
+}
+
+.optimize-btn {
+  width: 100%;
+  padding: 17px 24px;
+  background: var(--grad);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  position: relative;
+  overflow: hidden;
+  margin: 14px 0 32px;
+  box-shadow: 0 4px 24px rgba(79,140,255,0.3);
+}
+
+.optimize-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.optimize-btn:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 10px 40px rgba(79,140,255,0.45), 0 0 0 1px rgba(155,109,255,0.3);
+}
+
+.optimize-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+
+.optimize-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-icon {
+  font-size: 16px;
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+
+.optimize-btn:hover:not(:disabled) .btn-icon {
+  transform: rotate(25deg) scale(1.2);
+}
+
+.spinner {
+  display: none;
+  width: 18px; height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.optimize-btn.loading .btn-text,
+.optimize-btn.loading .btn-icon { display: none; }
+.optimize-btn.loading .spinner  { display: block; }
+
+.output-wrapper {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+}
+
+.output-wrapper.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.loading-overlay {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 56px 24px;
+  background: var(--card);
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.loading-overlay.show { display: flex; }
+
+.loading-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.loading-dots span {
+  width: 7px; height: 7px;
+  background: var(--grad);
+  border-radius: 50%;
+  animation: dotBounce 1.1s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dotBounce {
+  0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
+  40%          { transform: scale(1.2); opacity: 1; }
+}
+
+.loading-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.loading-bar-track {
+  width: 200px; height: 2px;
+  background: var(--border-mid);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  height: 100%; width: 0%;
+  background: var(--grad);
+  border-radius: 100px;
+  animation: loadfill 0.65s ease-out forwards;
+}
+
+@keyframes loadfill {
+  0%  { width: 0%; }
+  60% { width: 70%; }
+  100%{ width: 100%; }
+}
+
+#resultContent { display: none; }
+
+.compare-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+@media (max-width: 580px) {
+  .compare-wrapper { grid-template-columns: 1fr; }
+  .compare-arrow { display: none; }
+}
+
+/* Arrow between cards */
+.compare-arrow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--card-raised);
+  border: 1.5px solid var(--border-bright);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--blue);
+  box-shadow: 0 0 10px rgba(79,140,255,0.2);
+  pointer-events: none;
+}
+
+/* Before card — faded */
+.compare-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  opacity: 0.75;
+}
+
+/* After card — sharp and highlighted */
+.compare-card.after-card {
+  border-color: rgba(79,140,255,0.4);
+  background: var(--card-raised);
+  position: relative;
+  opacity: 1;
+  box-shadow: var(--shadow-card), 0 0 20px rgba(79,140,255,0.1);
+}
+
+.compare-card.after-card::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: var(--grad);
+}
+
+/* Optimized label above after card */
+.compare-optimized-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  padding-left: 2px;
+  opacity: 0.9;
+}
+
+.compare-before-label {
+  font-size: 10.5px;
+  color: transparent;
+  margin-bottom: 6px;
+  user-select: none;
+  pointer-events: none;
+}
+
+.compare-header {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.compare-header.before { color: var(--text-dim); }
+.compare-header.after  { color: var(--green); }
+
+.c-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.before .c-dot { background: var(--border-bright); }
+.after  .c-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+/* Before body — muted */
+.compare-body {
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-dim);
+  min-height: 80px;
+  word-break: break-word;
+}
+
+/* After body — bright and readable */
+.compare-body.after-body {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.75;
+}
+
+.output-full-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.output-ready-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.ready-dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 7px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.output-full-card {
+  background: var(--card-raised);
+  border: 1.5px solid var(--border-bright);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card), 0 0 60px rgba(79,140,255,0.06);
+}
+
+.output-top-bar {
+  height: 3px;
+  background: var(--grad);
+}
+
+.output-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.output-meta-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+.output-meta-count {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-dim);
+}
+
+.output-body {
+  padding: 28px 28px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 2.2;
+  color: #d4daef;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.015em;
+}
+
+.output-body .line-role {
+  color: #7eb3ff;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  display: block;
+  padding: 2px 10px;
+  background: rgba(79,140,255,0.08);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 2px;
+}
+
+.output-body .line-heading {
+  color: #c4a8ff;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 10px;
+  margin-bottom: -4px;
+  opacity: 0.9;
+}
+
+.output-body .line-bullet {
+  color: #bcc3e0;
+  padding-left: 4px;
+}
+
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  flex-wrap: wrap;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: var(--green-dim);
+  border: 1.5px solid var(--green-border);
+  border-radius: var(--radius-sm);
+  color: var(--green);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.copy-btn:hover {
+  background: rgba(46,235,168,0.18);
+  box-shadow: 0 0 20px rgba(46,235,168,0.2);
+  transform: translateY(-1px);
+}
+
+.copy-btn.copied {
+  background: rgba(46,235,168,0.22);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.improve-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: var(--grad-soft);
+  border: 1.5px solid var(--border-bright);
+  border-radius: var(--radius-sm);
+  color: var(--blue);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.improve-btn:hover {
+  background: rgba(79,140,255,0.15);
+  box-shadow: 0 0 20px rgba(79,140,255,0.2);
+  transform: translateY(-1px);
+}
+
+.action-spacer { flex: 1; }
+
+.action-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.prompt-helper-text {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  opacity: 0.75;
+}
+
+.page-footer {
+  text-align: center;
+  margin-top: 64px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  opacity: 0.7;
+}
+
+.footer-dot {
+  width: 3px; height: 3px;
+  background: var(--border-bright);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.animate-in {
+  animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+.animate-in:nth-child(1) { animation-delay: 0.05s; }
+.animate-in:nth-child(2) { animation-delay: 0.12s; }
+.animate-in:nth-child(3) { animation-delay: 0.18s; }
+.animate-in:nth-child(4) { animation-delay: 0.24s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 520px) {
+  /* Container */
+  .container { padding: 0 16px 80px; }
+
+  /* Nav */
+  nav {
+    padding: 20px 0 0;
+    margin-bottom: 36px;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .nav-badge { display: none; }
+  .logo-wordmark { font-size: 16px; }
+  .logo-icon-wrap { width: 32px; height: 32px; font-size: 15px; flex-shrink: 0; }
+
+  /* Hero */
+  .hero { margin-bottom: 36px; }
+  .hero h1 { font-size: clamp(28px, 7.5vw, 40px); letter-spacing: -0.02em; }
+  .hero-sub { font-size: 15px; margin-bottom: 20px; }
+  .hero-eyebrow { font-size: 10.5px; padding: 5px 13px; margin-bottom: 18px; }
+  .hero-platforms { font-size: 11.5px; }
+
+  /* Templates */
+  .templates-grid { gap: 6px; margin-bottom: 16px; }
+  .tpl-btn { font-size: 11px; padding: 7px 11px; }
+
+  /* Input card */
+  .input-card { padding: 16px 16px 12px; }
+  textarea { font-size: 15px; min-height: 120px; }
+  .input-footer { flex-direction: column; align-items: flex-start; gap: 6px; }
+
+  /* Optimize button */
+  .optimize-btn { font-size: 14px; padding: 15px 20px; margin: 12px 0 24px; }
+
+  /* Compare */
+  .compare-wrapper { grid-template-columns: 1fr; gap: 8px; margin-bottom: 16px; }
+
+  /* Output card */
+  .output-meta-row { padding: 11px 14px; }
+  .output-body { padding: 16px 14px; font-size: 12px; }
+  .output-meta-label { font-size: 10.5px; }
+
+  /* Action bar */
+  .action-bar { flex-direction: column; gap: 8px; padding: 12px 14px; }
+  .copy-btn, .improve-btn { width: 100%; justify-content: center; padding: 12px 20px; }
+  .action-hint { display: none; }
+  .action-spacer { display: none; }
+
+  /* Output label */
+  .output-full-label { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+  /* Section label */
+  .section-label { font-size: 10px; }
+
+  /* Footer */
+  .page-footer { gap: 10px; font-size: 11px; margin-top: 44px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+<div class="bg-grid"></div>
+
+<div class="container">
+
+  <nav>
+    <a href="#" class="logo">
+      <div class="logo-icon-wrap">✦</div>
+      <span class="logo-wordmark">Prompt<span class="logo-flow">Flow</span></span>
+    </a>
+    <div class="nav-badge">Free · No signup</div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span class="eyebrow-dot"></span>
+      AI Prompt Optimizer
+    </div>
+    <h1>Turn your ideas into powerful AI prompts instantly</h1>
+    <p class="hero-sub">
+      Get clearer, more accurate responses from <strong>ChatGPT, Claude, Gemini</strong>, etc.
+    </p>
+    <div class="hero-platforms">
+      Works with ChatGPT, Claude, Gemini, and more
+    </div>
+  </div>
+
+  <div class="animate-in">
+    <div class="section-label">Try an example</div>
+    <div class="templates-grid" id="templatesGrid">
+      <button class="tpl-btn" data-text="Explain how compound interest works with a simple real-world example" onclick="useTemplate(this)">
+        <span class="tpl-icon">💡</span> Explain a concept
+      </button>
+      <button class="tpl-btn" data-text="Write a cold email to a potential client for my freelance web design service" onclick="useTemplate(this)">
+        <span class="tpl-icon">✉️</span> Cold email
+      </button>
+      <button class="tpl-btn" data-text="Create a 4-week beginner workout plan to build strength and lose fat" onclick="useTemplate(this)">
+        <span class="tpl-icon">🏋️</span> Workout plan
+      </button>
+      <button class="tpl-btn" data-text="Explain what this JavaScript function does and suggest improvements" onclick="useTemplate(this)">
+        <span class="tpl-icon">🧩</span> Review code
+      </button>
+      <button class="tpl-btn" data-text="Create a 7-day Instagram content calendar for a personal finance page" onclick="useTemplate(this)">
+        <span class="tpl-icon">📅</span> Content calendar
+      </button>
+    </div>
+  </div>
+
+  <div class="animate-in">
+    <div class="section-label">Your idea or task</div>
+    <div class="input-card">
+      <textarea
+        id="userInput"
+        placeholder="Describe what you want to achieve — be specific for best results. E.g. 'Teach me how compound interest works using a beginner-friendly example'"
+        maxlength="1000"
+        oninput="updateCount()"
+      ></textarea>
+      <div class="input-footer">
+        <span class="char-count"><span id="charCount">0</span> / 1000</span>
+        <span class="input-tip">Be specific about your goal for better results</span>
+      </div>
+    </div>
+
+    <button class="optimize-btn" id="optimizeBtn" onclick="optimize()">
+      <span class="btn-icon">✦</span>
+      <span class="btn-text">Optimize My Prompt</span>
+      <div class="spinner"></div>
+    </button>
+    <p style="text-align:center; font-size:12px; color:var(--text-muted); opacity:0.6; margin:-20px 0 28px; letter-spacing:0.01em;">⚡ Get better results in seconds</p>
+  </div>
+
+  <div class="output-wrapper" id="outputWrapper">
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="loading-text">Optimizing your prompt…</div>
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill" id="loadingBar"></div>
+      </div>
+    </div>
+
+    <div id="resultContent">
+
+      <div class="section-label" style="margin-bottom:12px;">Before vs After</div>
+      <div class="compare-wrapper">
+        <div class="compare-arrow">→</div>
+        <div class="compare-card">
+          <div class="compare-header before">
+            <span class="c-dot"></span> Before — Your input
+          </div>
+          <div class="compare-body" id="beforeBody"></div>
+        </div>
+        <div class="compare-card after-card">
+          <div class="compare-header after">
+            <span class="c-dot"></span> ✨ Optimized Result
+          </div>
+          <div class="compare-body after-body" id="afterSummary"></div>
+        </div>
+      </div>
+
+      <div class="output-full-label">
+        <div class="section-label" style="margin-bottom:0;">Ready to use prompt</div>
+        <div class="output-ready-badge">
+          <span class="ready-dot"></span> Ready to use
+        </div>
+      </div>
+
+      <div class="output-full-card">
+        <div class="output-top-bar"></div>
+        <div class="output-meta-row">
+          <span class="output-meta-label">// optimized-prompt.txt</span>
+          <span class="output-meta-count" id="outputMeta"></span>
+        </div>
+        <div class="output-body" id="outputBody"></div>
+        <div class="action-bar">
+          <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">
+            <span id="copyIcon">⎘</span>
+            <span id="copyText">Copy Prompt</span>
+          </button>
+          <button class="improve-btn" onclick="improveAgain()">
+            <span>↺</span>
+            <span>Improve Again</span>
+          </button>
+          <div class="action-spacer"></div>
+          <span class="action-hint">Ctrl+Enter to optimize</span>
+        </div>
+      </div>
+
+      <p class="prompt-helper-text">
+        ✦ Copy and paste this prompt into ChatGPT, Claude, Gemini, or any AI tool for best results.
+      </p>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>PromptFlow</span>
+    <span class="footer-dot"></span>
+    <span>Works offline</span>
+    <span class="footer-dot"></span>
+    <span>No data stored</span>
+    <span class="footer-dot"></span>
+    <span>Free forever</span>
+  </div>
+
+</div>
+
+<script>
+  let rawPrompt = '';
+
+  function updateCount() {
+    document.getElementById('charCount').textContent = document.getElementById('userInput').value.length;
+  }
+
+  function useTemplate(btn) {
+    document.querySelectorAll('.tpl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const ta = document.getElementById('userInput');
+    ta.value = btn.dataset.text;
+    updateCount();
+    ta.focus();
+  }
+
+  function improveAgain() {
+    document.getElementById('userInput').focus();
+    document.getElementById('userInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function detectContext(input) {
+    const t = input.toLowerCase();
+    if (/email|letter|cold email|draft|compose|message to/.test(t))
+      return { role: 'expert copywriter and communication specialist', type: 'writing' };
+    if (/website|web app|portfolio|landing page|build.*site|html|css|javascript|python|code|program|develop/.test(t))
+      return { role: 'senior software engineer and web developer', type: 'technical' };
+    if (/explain|teach|what is|what are|how does|understand|learn/.test(t))
+      return { role: 'expert educator and subject matter specialist', type: 'educational' };
+    if (/plan|routine|schedule|strategy|goal|organize|roadmap/.test(t))
+      return { role: 'professional strategist and planning expert', type: 'planning' };
+    if (/business|marketing|startup|product|sales|customer|brand/.test(t))
+      return { role: 'experienced business strategist and marketing expert', type: 'business' };
+    if (/design|ui|ux|visual|graphic|layout|color palette/.test(t))
+      return { role: 'professional UI/UX designer and creative director', type: 'design' };
+    if (/workout|fitness|exercise|weight|diet|nutrition|calories/.test(t))
+      return { role: 'certified fitness coach and health expert', type: 'health' };
+    if (/story|poem|fiction|script|creative|narrative|character/.test(t))
+      return { role: 'creative writer and storytelling expert', type: 'creative' };
+    if (/math|physics|chemistry|biology|science|formula|equation/.test(t))
+      return { role: 'expert scientist and academic tutor', type: 'science' };
+    if (/finance|invest|money|budget|saving|stock|crypto/.test(t))
+      return { role: 'experienced financial analyst and advisor', type: 'finance' };
+    if (/content|instagram|twitter|social media|caption|post/.test(t))
+      return { role: 'expert social media strategist and content creator', type: 'social' };
+    return { role: 'expert consultant in the relevant field', type: 'general' };
+  }
+
+  function buildRequirements(type) {
+    const base = [
+      '- Provide a clear and structured explanation',
+      '- Break down the response step-by-step where applicable',
+      '- Use simple, easy-to-understand language',
+      '- Include practical examples where helpful',
+    ];
+    const extras = {
+      writing:     ['- Use a professional yet approachable tone', '- Include a subject line and call-to-action if relevant'],
+      technical:   ['- Include working code with inline comments', '- Recommend tools, libraries, or frameworks where appropriate'],
+      educational: ['- Use analogies to simplify complex ideas', '- End with a concise summary of key takeaways'],
+      planning:    ['- Suggest a realistic timeline or milestones', '- Identify potential obstacles and mitigation strategies'],
+      business:    ['- Support points with data or reasoning', '- Include measurable success metrics or KPIs'],
+      design:      ['- Reference core visual principles (contrast, hierarchy, whitespace)', '- Suggest tools or resources where useful'],
+      health:      ['- Include safety precautions or contraindications', '- Offer beginner, intermediate, and advanced options'],
+      creative:    ['- Prioritize vivid, original detail', '- Offer at least one unexpected creative angle'],
+      science:     ['- Define technical terms clearly', '- Connect concepts to real-world examples'],
+      finance:     ['- Clarify this is for educational purposes only', '- Include relevant risk considerations'],
+      social:      ['- Tailor tone to the target platform and audience', '- Include posting frequency or scheduling suggestions'],
+      general:     ['- Anticipate likely follow-up questions and address them proactively'],
+    };
+    return [...base, ...(extras[type] || extras.general)].join('\n');
+  }
+
+  function buildOutputLine(type) {
+    const map = {
+      writing:     '- Deliver a complete, ready-to-use written piece with optional variations.',
+      technical:   '- Provide a complete, working solution with full explanation and code.',
+      educational: '- Give a thorough, structured explanation that leaves no gaps.',
+      planning:    '- Deliver a complete, actionable plan ready to implement immediately.',
+      business:    '- Provide a strategic, reasoned response with clear next steps.',
+      design:      '- Describe the design direction in detail with rationale for each decision.',
+      health:      '- Provide a safe, practical, and personalized plan with clear guidance.',
+      creative:    '- Deliver a polished, original creative output in full.',
+      science:     '- Provide an accurate, structured explanation with real-world examples.',
+      finance:     '- Give a clear financial breakdown with balanced, actionable advice.',
+      social:      '- Deliver a complete content plan with ready-to-post examples.',
+      general:     '- Provide a complete, high-quality, well-organized response.',
+    };
+    return map[type] || map.general;
+  }
+
+  function generatePrompt(userInput) {
+    const trimmed = userInput.trim();
+    const ctx  = detectContext(trimmed);
+    const reqs = buildRequirements(ctx.type);
+    const out  = buildOutputLine(ctx.type);
+    return `Act as: ${ctx.role}\n\nTask:\n${trimmed}\n\nRequirements:\n${reqs}\n\nOutput:\n${out}`;
+  }
+
+  function renderHighlighted(prompt) {
+    const container = document.getElementById('outputBody');
+    container.innerHTML = '';
+    prompt.split('\n').forEach(line => {
+      const div = document.createElement('div');
+      if (/^Act as:/.test(line))
+        div.className = 'line-role';
+      else if (/^(Task:|Requirements:|Output:)$/.test(line.trim()))
+        div.className = 'line-heading';
+      else if (line.startsWith('-'))
+        div.className = 'line-bullet';
+      div.textContent = line || '\u00A0';
+      container.appendChild(div);
+    });
+  }
+
+  function buildAfterSummary(prompt) {
+    const taskMatch = prompt.match(/Task:\n(.+)/);
+    const roleMatch = prompt.match(/Act as: (.+)/);
+    const task = taskMatch ? taskMatch[1].slice(0, 110) : '';
+    const role = roleMatch ? roleMatch[1] : 'an expert';
+    return `Act as: ${role}\n\nTask: ${task}${task.length >= 110 ? '…' : ''}`;
+  }
+
+  function optimize() {
+    const input = document.getElementById('userInput').value.trim();
+    if (!input) {
+      const ta = document.getElementById('userInput');
+      ta.focus();
+      ta.style.outline = '2px solid rgba(255,80,80,0.5)';
+      setTimeout(() => ta.style.outline = '', 1100);
+      return;
+    }
+
+    const wrapper  = document.getElementById('outputWrapper');
+    const loading  = document.getElementById('loadingOverlay');
+    const result   = document.getElementById('resultContent');
+    const btn      = document.getElementById('optimizeBtn');
+
+    wrapper.classList.add('visible');
+    loading.classList.add('show');
+    result.style.display = 'none';
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    const bar = document.getElementById('loadingBar');
+    bar.style.animation = 'none';
+    bar.offsetHeight;
+    bar.style.animation = '';
+
+    wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    setTimeout(() => {
+      rawPrompt = generatePrompt(input);
+
+      document.getElementById('beforeBody').textContent = input;
+      document.getElementById('afterSummary').textContent = buildAfterSummary(rawPrompt);
+
+      renderHighlighted(rawPrompt);
+
+      const words = rawPrompt.trim().split(/\s+/).length;
+      document.getElementById('outputMeta').textContent = `${words} words`;
+
+      document.getElementById('copyText').textContent = 'Copy Prompt';
+      document.getElementById('copyIcon').textContent = '⎘';
+      document.getElementById('copyBtn').classList.remove('copied');
+
+      loading.classList.remove('show');
+      result.style.display = 'block';
+      btn.classList.remove('loading');
+      btn.disabled = false;
+
+      document.querySelectorAll('.tpl-btn').forEach(b => b.classList.remove('active'));
+    }, 680);
+  }
+
+  function copyPrompt() {
+    if (!rawPrompt) return;
+    const succeed = () => {
+      const btn = document.getElementById('copyBtn');
+      document.getElementById('copyText').textContent = 'Copied!';
+      document.getElementById('copyIcon').textContent = '✓';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        document.getElementById('copyText').textContent = 'Copy Prompt';
+        document.getElementById('copyIcon').textContent = '⎘';
+        btn.classList.remove('copied');
+      }, 2400);
+    };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(rawPrompt).then(succeed).catch(() => fallbackCopy(succeed));
+    } else {
+      fallbackCopy(succeed);
+    }
+  }
+
+  function fallbackCopy(cb) {
+    const ta = Object.assign(document.createElement('textarea'), {
+      value: rawPrompt,
+      style: 'position:fixed;opacity:0;top:0;left:0;'
+    });
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    cb();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('userInput').addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') optimize();
+    });
+  });
+</script>
+</body>
+</html>
